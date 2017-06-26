@@ -1,9 +1,8 @@
 from abc import ABCMeta, abstractmethod
 
-from Trading import strategy as stgy
+import pandas as pd
 import matplotlib.pyplot as plt
 
-initial_capital = 100000.0
 
 class Portfolio(object):
     __metaclass__ = ABCMeta
@@ -20,6 +19,7 @@ class Portfolio(object):
     def graph(self):
         raise NotImplementedError("Implement graph()")
 
+
 class MarketOnClosePortfolio(Portfolio):
     def __init__(self, symbol, bars, signals, initial_capital):
         self.symbol = symbol
@@ -27,9 +27,10 @@ class MarketOnClosePortfolio(Portfolio):
         self.signals = signals
         self.initial_capital = float(initial_capital)
         self.positions = self.generate_positions()
+        self.portfolio = None
 
     def generate_positions(self):
-        positions = stgy.pd.DataFrame(index=self.signals.index)
+        positions = pd.DataFrame(index=self.signals.index)
         positions[self.symbol] = 100*self.signals['signal']
 
         return positions
@@ -39,7 +40,7 @@ class MarketOnClosePortfolio(Portfolio):
         pos_diff = self.positions.diff()
 
         portfolio['holdings'] = (self.positions.multiply(self.bars['Close'], axis=0)).sum(axis=1)
-        portfolio['cash'] = initial_capital - (pos_diff.multiply(self.bars['Close'], axis=0)).sum(axis=1).cumsum()
+        portfolio['cash'] = self.initial_capital - (pos_diff.multiply(self.bars['Close'], axis=0)).sum(axis=1).cumsum()
         portfolio['total'] = portfolio['cash'] + portfolio['holdings']
         portfolio['returns'] = portfolio['total'].pct_change()
 
